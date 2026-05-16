@@ -9,44 +9,60 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Fade Sections using IntersectionObserver
+  const fadeSections = document.querySelectorAll('.fade-section');
+  const observerOptions = {
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.15
+  };
+
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  fadeSections.forEach(section => {
+    observer.observe(section);
+  });
+
   // Video Scrubbing on Scroll
   const video = document.getElementById('hero-video');
   const scrollContainer = document.querySelector('.video-scroll-container');
+  const videoOverlay = document.querySelector('.video-overlay');
   
-  // Make sure video is loaded enough to get its duration
   video.addEventListener('loadedmetadata', () => {
-    // Scrub logic
     window.addEventListener('scroll', () => {
-      // Get the bounding rectangle of the scroll container
       const rect = scrollContainer.getBoundingClientRect();
       const containerTop = rect.top;
       const containerHeight = rect.height;
       
-      // Calculate scroll progress (0 to 1)
-      // containerTop is 0 when the top of the container hits the top of the viewport
-      // It becomes negative as we scroll down.
-      // We want to track progress from when containerTop hits 0 until the bottom of the container hits the bottom of the viewport
-      
-      // The total scrollable distance for the container
       const scrollableDistance = containerHeight - window.innerHeight;
-      
       let progress = -containerTop / scrollableDistance;
       
-      // Clamp progress between 0 and 1
       if (progress < 0) progress = 0;
       if (progress > 1) progress = 1;
       
-      // Update video current time
       if (video.duration) {
-        // use requestAnimationFrame for smooth updating
         requestAnimationFrame(() => {
           video.currentTime = video.duration * progress;
+          
+          // Fade out the overlay text slightly faster as they scroll down
+          if (progress > 0) {
+            videoOverlay.style.opacity = Math.max(0, 1 - (progress * 2.5));
+          } else {
+            videoOverlay.style.opacity = 1;
+          }
         });
       }
     });
   });
 
-  // Smooth scrolling for anchor links
+  // Smooth scrolling
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
       e.preventDefault();
